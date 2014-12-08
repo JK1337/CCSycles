@@ -17,7 +17,6 @@ using System.Drawing;
 
 namespace MaterialPrinter
 {
-
     public interface IUI
     {
         string getSceneFileName();
@@ -28,198 +27,10 @@ namespace MaterialPrinter
 
     public class Engine
     {
-        /*
-        [DllImport("Kernel32.dll")]
-        static extern Boolean AllocConsole();
-
-         * */
-        public static class Dynamic_Shader
-        {
-            private static Client client;
-            private static Device device;
-            private static Scene scene;
-
-            public static Client Client
-            {
-                set
-                {
-                    client = Client;
-                }
-                get
-                {
-                    return client;
-                }
-            }
-
-            public static Device Device
-            {
-                set
-                {
-                    device = Device;
-                }
-                get
-                {
-                    return device;
-                }
-            }
-
-            public static Scene Scene
-            {
-                set
-                {
-                    scene = Scene;
-                }
-                get
-                {
-                    return scene;
-                }
-            }
-
-            public static Shader Show(Client cl, Device dv, Scene sc, Shader.ShaderType st)
-            {
-                Client = cl;
-                Device = dv;
-                Scene = sc;
-
-                #region material_hologramu
-                var material_hologramu = new Shader(cl, st);
-
-                material_hologramu.Name = "material_hologramu";
-                material_hologramu.UseMis = false;
-                material_hologramu.UseTransparentShadow = true;
-                material_hologramu.HeterogeneousVolume = false;
-
-
-                var hologram_material_emission = new EmissionNode();
-                hologram_material_emission.ins.Strength.Value = 1.000f;
-
-                var image_texture = new ImageTextureNode();
-                image_texture.ColorSpace = TextureNode.TextureColorSpace.None;
-                image_texture.Projection = TextureNode.TextureProjection.Flat;
-                image_texture.Interpolation = InterpolationType.Linear;
-                image_texture.Filename = "D:\\Material\\tifs\\TST5.tif";
-                using (var bmp = new Bitmap(image_texture.Filename))
-                {
-                    var l = bmp.Width * bmp.Height * 4;
-                    var bmpdata = new byte[l];
-                    for (var x = 0; x < bmp.Width; x++)
-                    {
-                        for (var y = 0; y < bmp.Height; y++)
-                        {
-                            var pos = y * bmp.Width * 4 + x * 4;
-                            var pixel = bmp.GetPixel(x, y);
-                            bmpdata[pos] = pixel.R;
-                            bmpdata[pos + 1] = pixel.G;
-                            bmpdata[pos + 2] = pixel.B;
-                            bmpdata[pos + 3] = pixel.A;
-                        }
-                    }
-                    image_texture.ByteImage = bmpdata;
-                    image_texture.Width = (uint)bmp.Width;
-                    image_texture.Height = (uint)bmp.Height;
-                }
-
-                var input = new TextureCoordinateNode();
-
-                var mapping_001 = new MappingNode();
-                mapping_001.vector_type = MappingNode.vector_types.TEXTURE;
-                mapping_001.Translation = new float4(1.000f, 1.000f, 1.000f);
-                mapping_001.Rotation = new float4(0.000f, 0.000f, 0.000f);
-                mapping_001.Scale = new float4(1.000f, 1.000f, 1.000f);
-
-                //var diffuse_bsdf = new DiffuseBsdfNode();
-                //diffuse_bsdf.ins.Color.Value = new float4(0.800f, 0.800f, 0.800f);
-                //diffuse_bsdf.ins.Roughness.Value = 0.000f;
-                //diffuse_bsdf.ins.Normal.Value = new float4(0.000f, 0.000f, 0.000f);
-
-
-                material_hologramu.AddNode(hologram_material_emission);
-                material_hologramu.AddNode(image_texture);
-                material_hologramu.AddNode(input);
-                material_hologramu.AddNode(mapping_001);
-                //material_hologramu.AddNode(output);
-                //material_hologramu.AddNode(diffuse_bsdf);
-
-                //hologram_material_emission.outs.Emission.Connect(output.ins.Surface);
-                image_texture.outs.Color.Connect(hologram_material_emission.ins.Color);
-                input.outs.UV.Connect(mapping_001.ins.Vector);
-                mapping_001.outs.Vector.Connect(image_texture.ins.Vector);
-
-                hologram_material_emission.outs.Emission.Connect(material_hologramu.Output.ins.Surface);
-
-                //image_texture.outs.Color.Connect(diffuse_bsdf.ins.Color);
-
-
-                //diffuse_bsdf.outs.BSDF.Connect(material_hologramu.Output.ins.Surface);
-
-                material_hologramu.FinalizeGraph();
-
-                //sc.AddShader(material_hologramu);
-                //sc.Background.Shader = material_hologramu;
-                //sc.DefaultSurface = material_hologramu;
-
-                return material_hologramu;
-                #endregion
-                /*
-				
-				#region default shader
-
-				var some_setup = new Shader(cl, st)
-				{
-					Name = "some_setup"
-				};
-
-				var brick_texture = new BrickTexture();
-				brick_texture.ins.Vector.Value = new float4(0.000f, 0.000f, 0.000f);
-				brick_texture.ins.Color1.Value = new float4(0.200f, 0.200f, 0.200f);
-				brick_texture.ins.Color2.Value = new float4(0.200f, 0.200f, 0.200f);
-				brick_texture.ins.Mortar.Value = new float4(0.000f, 0.000f, 0.000f);
-				brick_texture.ins.Scale.Value = 1.000f;
-				brick_texture.ins.MortarSize.Value = 0.020f;
-				brick_texture.ins.Bias.Value = 0.000f;
-				brick_texture.ins.BrickWidth.Value = 0.100f;
-				brick_texture.ins.RowHeight.Value = 0.080f;
-
-				var checker_texture = new CheckerTexture();
-				checker_texture.ins.Vector.Value = new float4(0.000f, 0.000f, 0.000f);
-				checker_texture.ins.Color1.Value = new float4(0.500f, 0.800f, 0.200f);
-				checker_texture.ins.Color2.Value = new float4(0.000f, 0.200f, 0.800f);
-				checker_texture.ins.Scale.Value = 0.050f;
-				
-				//var diffuse_bsdf = new DiffuseBsdfNode();
-				//diffuse_bsdf.ins.Color.Value = new float4(0.800f, 0.800f, 0.800f);
-				//diffuse_bsdf.ins.Roughness.Value = 0.000f;
-				//diffuse_bsdf.ins.Normal.Value = new float4(0.000f, 0.000f, 0.000f);
-				
-				var texture_coordinate = new TextureCoordinateNode();
-
-				some_setup.AddNode(brick_texture);
-				some_setup.AddNode(checker_texture);
-				//some_setup.AddNode(diffuse_bsdf);
-				some_setup.AddNode(texture_coordinate);
-
-				//brick_texture.outs.Color.Connect(diffuse_bsdf.ins.Color);
-				checker_texture.outs.Color.Connect(brick_texture.ins.Mortar);
-				texture_coordinate.outs.Normal.Connect(checker_texture.ins.Vector);
-				texture_coordinate.outs.UV.Connect(brick_texture.ins.Vector);
-
-				//diffuse_bsdf.outs.BSDF.Connect(some_setup.Output.ins.Surface);
-				brick_texture.outs.Color.Connect(some_setup.Output.ins.Surface);
-
-				some_setup.FinalizeGraph();
-
-				return some_setup;
-				#endregion
-				*/
-
-            }
-        }
-
-        #region meshdata
+        #region default surface mesh data
         static float[] vert_floats =
 			{
-				-1.0f, -1.0f, 0.0f, -1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, -1.0f, 0.0f
-				 
+				 1.0f, 1.0f, 0.0f, -1.0f, 1.0f, 0.0f, -1.0f, -1.0f, 0.0f, 1.0f, -1.0f, 0.0f
 			};
         readonly static int[] nverts =
 			{
@@ -227,12 +38,18 @@ namespace MaterialPrinter
 			};
         readonly static int[] vertex_indices =
 			{
-				0, 2, 1, 0, 3, 2
+				0, 1, 2, 3
 			};
+        private static float[] UV_coords = 
+            {
+                1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.5f, 0.5f, 0.0f, 0.5f, 0.0f, 1.0f, 0.5f, 1.0f
+            };
         #endregion
         private const uint width = 1024;
         private const uint height = 1024;
         private const uint samples = 1;
+
+
         static Session Session { get; set; }
         static Client Client { get; set; }
         static Device Device { get; set; }
@@ -369,17 +186,12 @@ namespace MaterialPrinter
                         Shader dynamic_shader = returned_value as Shader;
                         Scene.AddShader(dynamic_shader);
                         Scene.DefaultSurface = dynamic_shader;
-                        //Scene.Background.Shader = dynamic_shader;
                     }
                     else
                     {
                         SetMessage("Unable to load Material into scene!");
                     }
 
-
-
-                    //var mapping_001 = new MappingNode();
-                    //mapping_001.outs.Vector.Connect(image_texture.ins.Vector);
 
                     /*
                     try
@@ -404,118 +216,6 @@ namespace MaterialPrinter
                     //String ClassName = "ccl.Shader";
                     //Shader dynamic_shader = (Shader)Activator.CreateInstance(cr.CompiledAssembly, ClassName))
 
-                    /*
-                    Shader dynamic_shader = new Shader(Client, Shader.ShaderType.World)
-                    {
-                        Name = "Dynamic shader"
-                    };
-                    */
-
-                    /*
-                    Type t = typeof(Shader);
-                    int val;
-
-                    // Get constructor info. 
-                    ConstructorInfo[] ci = t.GetConstructors();
-
-                    Console.WriteLine("Available constructors: ");
-                    foreach (ConstructorInfo c in ci)
-                    {
-                        // Display return type and name. 
-                        SetMessage("   " + t.Name + "(");
-
-                        // Display parameters. 
-                        ParameterInfo[] pi = c.GetParameters();
-
-                        for (int i = 0; i < pi.Length; i++)
-                        {
-                            Console.Write(pi[i].ParameterType.Name +
-                                          " " + pi[i].Name);
-                            if (i + 1 < pi.Length) Console.Write(", ");
-                        }
-
-                        SetMessage(")");
-                    }
-                    SetMessage("");
-
-                    // Find matching constructor. 
-                    int x;
-
-                    for (x = 0; x < ci.Length; x++)
-                    {
-                        ParameterInfo[] pi = ci[x].GetParameters();
-                        if (pi.Length == 2) break;
-                    }
-
-                    if (x == ci.Length)
-                    {
-                        SetMessage("No matching constructor found.");
-                    }
-                    else
-                        SetMessage("Two-parameter constructor found.\n");
-
-                    // Construct the object.   
-                    object[] consargs = new object[2];
-                    consargs[0] = Client;
-                    consargs[1] = Shader.ShaderType.World;
-                    object reflectOb = ci[x].Invoke(consargs);
-
-                    SetMessage("\nInvoking methods on reflectOb.");
-                    SetMessage("");
-                    MethodInfo[] mi = t.GetMethods();
-
-                    foreach (MethodInfo m in mi)
-                    {
-                         if (m.Name.CompareTo("set") == 0)
-                         {
-
-                         }
-                    }
-                     * */
-
-                    /*
-                    // Invoke each method. 
-                    foreach (MethodInfo m in mi)
-                    {
-                        // Get the parameters 
-                        ParameterInfo[] pi = m.GetParameters();
-
-                        if (m.Name.CompareTo("set") == 0 &&
-                           pi[0].ParameterType == typeof(int))
-                        {
-                            // This is set(int, int). 
-                            object[] args = new object[2];
-                            args[0] = 9;
-                            args[1] = 18;
-                            m.Invoke(reflectOb, args);
-                        }
-                        else if (m.Name.CompareTo("set") == 0 &&
-                                pi[0].ParameterType == typeof(double))
-                        {
-                            // This is set(double, double). 
-                            object[] args = new object[2];
-                            args[0] = 1.12;
-                            args[1] = 23.4;
-                            m.Invoke(reflectOb, args);
-                        }
-                        else if (m.Name.CompareTo("sum") == 0)
-                        {
-                            val = (int)m.Invoke(reflectOb, null);
-                            SetMessage("sum is " + val);
-                        }
-                        else if (m.Name.CompareTo("isBetween") == 0)
-                        {
-                            object[] args = new object[1];
-                            args[0] = 14;
-                            if ((bool)m.Invoke(reflectOb, args))
-                                SetMessage("14 is between x and y");
-                        }
-                        else if (m.Name.CompareTo("show") == 0)
-                        {
-                            m.Invoke(reflectOb, null);
-                        }
-                    } 
-                    */
                 }
 
                 // Return the results of the compilation.
@@ -597,11 +297,6 @@ namespace MaterialPrinter
 
         public static void Initiate()
         {
-            /*
-            if (!AllocConsole())
-                MessageBox.Show("Failed");
-            */
-
             SetMessage("Reading input...");
 
             string materialFile = _iui.getMaterialFileName();//Path.GetFullPath(_iui.getMaterialFileName());
@@ -640,87 +335,40 @@ namespace MaterialPrinter
             var scene_params = new SceneParameters(client, ShadingSystem.SVM, BvhType.Static, true, false, false, false);
             var scene = new Scene(client, scene_params, dev);
 
-            //SetMessage("Setup Camera...");
+            SetMessage("Setup Camera...");
             /* move the scene camera a bit, so we can see our render result. */
-            /*
+            
             var t = Transform.Identity();
-            float angle = 90.0f;
-            t = t * Transform.Rotate(angle * (float)Math.PI / 180.0f, new float4(0.0f, 1.0f, 0.0f));
-            t = t * Transform.Translate(0.0f, 0.0f, 2.188f);
-            t = t * Transform.Scale(1.0f, 1.0f, 1.0f);
-            */
-
-            //scene.Camera.Matrix = t;
+            //float angle = 90.0f;
+            //t = t * Transform.Rotate(angle * (float)Math.PI / 180.0f, new float4(0.0f, 1.0f, 0.0f));
+            t = t * Transform.Translate(0.0f, 0.0f, 5.0f);
+            t = t * Transform.Scale(1.0f, -1.0f, -1.0f);
+            
+            scene.Camera.Matrix = t;
             /* set also the camera size = render resolution in pixels. Also do some extra settings. */
-            //scene.Camera.Size = new Size((int)width, (int)height);
-            //scene.Camera.Type = CameraType.Perspective;
-            //scene.Camera.ApertureSize = 0.0f;
-            //scene.Camera.Fov = 0.661f;
-            //scene.Camera.FocalDistance = 0.0f;
-            //scene.Camera.SensorWidth = 32.0f;
-            //scene.Camera.SensorHeight = 18.0f;
+            scene.Camera.Size = new Size((int)Engine.width, (int)Engine.height);
+            scene.Camera.Type = CameraType.Orthographic;
+            scene.Camera.ApertureSize = 0.0f;
+            scene.Camera.Fov = 0.661f;
+            scene.Camera.FocalDistance = 0.0f;
+            scene.Camera.SensorWidth = 32.0f;
+            scene.Camera.SensorHeight = 18.0f;
             #endregion
 
             SetMessage("Creating default shader...");
 
-            //#region default shader
-
-            //var some_setup = new Shader(Client, Shader.ShaderType.Material)
-            //{
-            //    Name = "some_setup"
-            //};
-
-            //var brick_texture = new BrickTexture();
-            //brick_texture.ins.Vector.Value = new float4(0.000f, 0.000f, 0.000f);
-            //brick_texture.ins.Color1.Value = new float4(0.800f, 0.800f, 0.800f);
-            //brick_texture.ins.Color2.Value = new float4(0.200f, 0.200f, 0.200f);
-            //brick_texture.ins.Mortar.Value = new float4(0.000f, 0.000f, 0.000f);
-            //brick_texture.ins.Scale.Value = 1.000f;
-            //brick_texture.ins.MortarSize.Value = 0.020f;
-            //brick_texture.ins.Bias.Value = 0.000f;
-            //brick_texture.ins.BrickWidth.Value = 0.500f;
-            //brick_texture.ins.RowHeight.Value = 0.250f;
-
-            //var checker_texture = new CheckerTexture();
-            //checker_texture.ins.Vector.Value = new float4(0.000f, 0.000f, 0.000f);
-            //checker_texture.ins.Color1.Value = new float4(0.000f, 0.004f, 0.800f);
-            //checker_texture.ins.Color2.Value = new float4(0.200f, 0.000f, 0.007f);
-            //checker_texture.ins.Scale.Value = 5.000f;
-
-            //var diffuse_bsdf = new DiffuseBsdfNode();
-            //diffuse_bsdf.ins.Color.Value = new float4(0.800f, 0.800f, 0.800f);
-            //diffuse_bsdf.ins.Roughness.Value = 0.000f;
-            //diffuse_bsdf.ins.Normal.Value = new float4(0.000f, 0.000f, 0.000f);
-
-            //var texture_coordinate = new TextureCoordinateNode();
-
-            //some_setup.AddNode(brick_texture);
-            //some_setup.AddNode(checker_texture);
-            //some_setup.AddNode(diffuse_bsdf);
-            //some_setup.AddNode(texture_coordinate);
-
-            //brick_texture.outs.Color.Connect(diffuse_bsdf.ins.Color);
-            //checker_texture.outs.Color.Connect(brick_texture.ins.Mortar);
-            //texture_coordinate.outs.Normal.Connect(checker_texture.ins.Vector);
-            //texture_coordinate.outs.UV.Connect(brick_texture.ins.Vector);
-
-            //diffuse_bsdf.outs.BSDF.Connect(some_setup.Output.ins.Surface);
-
-            //some_setup.FinalizeGraph();
-
-            //scene.AddShader(some_setup);
-            //scene.DefaultSurface = some_setup;
-            //#endregion
+            #region default shader            
 
             SetMessage("Creating shader...");
-            Shader test = Dynamic_Shader.Show(Client, Device, Scene, Shader.ShaderType.Material);
-            scene.AddShader(test);
+            Shader test = TestShader.ReadShader(Client, Device, scene, Shader.ShaderType.Material);
             scene.DefaultSurface = test;
 
             SetMessage("Shader \'" + test.Name + "\' Created!!!!");
             SetMessage("" + test.Type.ToString());
 
             SetMessage("Creating background shader...");
+
+            #endregion
 
             #region background shader
             /* Create a simple surface shader and make it the default surface shader */
@@ -746,9 +394,8 @@ namespace MaterialPrinter
             /* get scene-specific default shader ID */
             var default_shader = scene.ShaderSceneId(scene.DefaultSurface);
 
-            //SetMessage("Set integrator settings...");
+            SetMessage("Set integrator settings...");
             /* Set integrator settings */
-            /*
             scene.Integrator.IntegratorMethod = IntegratorMethod.Path;
             scene.Integrator.MaxBounce = 1;
             scene.Integrator.MinBounce = 1;
@@ -758,58 +405,80 @@ namespace MaterialPrinter
             scene.Integrator.Seed = 1;
             scene.Integrator.SamplingPattern = SamplingPattern.Sobol;
             scene.Integrator.FilterGlossy = 0.0f;
-             * */
 
             SetMessage("Add geometry to scene...");
             /* Add a bit of geometry and move camera around so we can see what we're rendering.
              * First off we need an object, we put it at the origo
              */
-
-            var xml = new XmlReader(client, sceneFile);
-            xml.Parse();
-            var width = (uint)scene.Camera.Size.Width;
-            var height = (uint)scene.Camera.Size.Height;
-
-
-            //var ob = CSycles.scene_add_object(Client.Id, scene.Id);
-            //CSycles.object_set_matrix(Client.Id, scene.Id, ob, Transform.Identity());
-            //var mesh = CSycles.scene_add_mesh(Client.Id, scene.Id, ob, default_shader);
-
-            /* populate mesh with geometry */
-            /*
-            CSycles.mesh_set_verts(Client.Id, scene.Id, mesh, ref vert_floats, (uint)(vert_floats.Length / 3));
-            var index_offset = 0;
-            foreach (var face in nverts)
+            if(!sceneFile.Equals(string.Empty))
             {
-                for (var j = 0; j < face - 2; j++)
-                {
-                    var v0 = (uint)vertex_indices[index_offset];
-                    var v1 = (uint)vertex_indices[index_offset + j + 1];
-                    var v2 = (uint)vertex_indices[index_offset + j + 2];
+                var xml = new XmlReader(client, sceneFile);
+                xml.Parse();
+                var width = (uint)scene.Camera.Size.Width;
+                var height = (uint)scene.Camera.Size.Height;
+            }
+            else
+            {
+                var fc = Engine.nverts.Aggregate(0, (total, next) =>
+                                                                            next == 4 ? total + 2 : total + 1);
+                float[] uvs = new float[fc * 3 * 2];
+                var uvoffs = 0;
 
-                    CSycles.mesh_add_triangle(Client.Id, scene.Id, mesh, v0, v1, v2, default_shader, false);
+                // OLD
+                var ob = CSycles.scene_add_object(Client.Id, scene.Id);
+                CSycles.object_set_matrix(Client.Id, scene.Id, ob, Transform.Identity());
+                var mesh = CSycles.scene_add_mesh(Client.Id, scene.Id, ob, default_shader);
+
+                /* populate mesh with geometry */
+                
+                CSycles.mesh_set_verts(Client.Id, scene.Id, mesh, ref vert_floats, (uint)(vert_floats.Length / 3));
+                var index_offset = 0;
+                foreach (var face in nverts)
+                {
+                    for (var j = 0; j < face - 2; j++)
+                    {
+                        var v0 = (uint)vertex_indices[index_offset];
+                        var v1 = (uint)vertex_indices[index_offset + j + 1];
+                        var v2 = (uint)vertex_indices[index_offset + j + 2];
+
+                        uvs[uvoffs] = UV_coords[index_offset * 2];
+                        uvs[uvoffs + 1] = UV_coords[index_offset * 2 + 1];
+                        uvs[uvoffs + 2] = UV_coords[(index_offset + j + 1) * 2];
+                        uvs[uvoffs + 3] = UV_coords[(index_offset + j + 1) * 2 + 1];
+                        uvs[uvoffs + 4] = UV_coords[(index_offset + j + 2) * 2];
+                        uvs[uvoffs + 5] = UV_coords[(index_offset + j + 2) * 2 + 1];
+
+                        uvoffs += 6;
+
+                        CSycles.mesh_add_triangle(Client.Id, scene.Id, mesh, v0, v1, v2, default_shader, false);
+                    }
+
+                    index_offset += face;
                 }
 
-                index_offset += face;
-            }
-            */
+                CSycles.mesh_set_uvs(Client.Id, scene.Id, mesh, ref uvs, (uint)(uvs.Length / 2));
+
+            }         
+
+
+            
 
 
             #region point light shader
 
-            var light_shader = new Shader(client, Shader.ShaderType.Material)
-            {
-                Name = "Tester light shader"
-            };
+            //var light_shader = new Shader(client, Shader.ShaderType.Material)
+            //{
+            //    Name = "Tester light shader"
+            //};
 
-            var emission_node = new EmissionNode();
-            emission_node.ins.Color.Value = new float4(0.8f);
-            emission_node.ins.Strength.Value = 30.0f;
+            //var emission_node = new EmissionNode();
+            //emission_node.ins.Color.Value = new float4(0.8f);
+            //emission_node.ins.Strength.Value = 30.0f;
 
-            light_shader.AddNode(emission_node);
-            emission_node.outs.Emission.Connect(light_shader.Output.ins.Surface);
-            light_shader.FinalizeGraph();
-            scene.AddShader(light_shader);
+            //light_shader.AddNode(emission_node);
+            //emission_node.outs.Emission.Connect(light_shader.Output.ins.Surface);
+            //light_shader.FinalizeGraph();
+            //scene.AddShader(light_shader);
             #endregion
 
 

@@ -37,7 +37,7 @@
     <RunPostBuildEvent>Always</RunPostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>appIcon.ico</ApplicationIcon>
+    <ApplicationIcon>Application\appIcon.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>MaterialPrinter.Program</StartupObject>
@@ -55,18 +55,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Engine.cs" />
-    <Compile Include="Form1.cs">
+    <Compile Include="Engine\TestShader.cs" />
+    <Compile Include="Engine\Engine.cs" />
+    <Compile Include="Application\Form1.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Form1.Designer.cs">
+    <Compile Include="Application\Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
-    <Compile Include="Program.cs" />
+    <Compile Include="Application\Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="XmlReader.cs" />
-    <Compile Include="XmlReadState.cs" />
-    <EmbeddedResource Include="Form1.resx">
+    <Compile Include="Engine\XmlReader.cs" />
+    <Compile Include="Engine\XmlReadState.cs" />
+    <EmbeddedResource Include="Application\Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -89,10 +90,10 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <None Include="Application\App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="appIcon.ico" />
+    <Content Include="Application\appIcon.ico" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\csycles\csycles.csproj">
@@ -100,6 +101,7 @@
       <Name>csycles</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy /Y  "$(ProjectDir)..\ccycles\x64\$(ConfigurationName)\ccycles.dll" "$(TargetDir)"
