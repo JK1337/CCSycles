@@ -6,17 +6,19 @@ using System.Threading.Tasks;
 
 namespace MaterialPrinter
 {
-    class RenderScript
+    class RenderJob
     {
-        public RenderScript() { }
+        public RenderJob() { }
         private bool _TestRender;
         private int _OrthoScale;
         private int _NumberOfHorizontalSteps;
         private int _NumberOfVerticalSteps;
         private int _TestStepX;
         private int _TestStepY;
-        private int _CurrentX;
-        private int _CurrentY;
+        private int _StartX;
+        private int _StartY;
+        private int _EndX;
+        private int _EndY;
 
         public bool TestRender
         {
@@ -84,26 +86,48 @@ namespace MaterialPrinter
                 _TestStepY = value;
             }
         }
-        public int CurrentX
+        public int StartX
         {
             get
             {
-                return _CurrentX;
+                return _StartX;
             }
             set
             {
-                _CurrentX = value;
+                _StartX = value;
             }
         }
-        public int CurrentY
+        public int StartY
         {
             get
             {
-                return _CurrentY;
+                return _StartY;
             }
             set
             {
-                _CurrentY = value;
+                _StartY = value;
+            }
+        }
+        public int EndX
+        {
+            get
+            {
+                return _EndX;
+            }
+            set
+            {
+                _EndX = value;
+            }
+        }
+        public int EndY
+        {
+            get
+            {
+                return _EndY;
+            }
+            set
+            {
+                _EndY = value;
             }
         }
     }

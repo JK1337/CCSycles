@@ -15,6 +15,8 @@ using ccl;
 using ccl.ShaderNodes;
 using System.Drawing;
 
+using System.Diagnostics;
+
 namespace MaterialPrinter
 {
     public interface IUI
@@ -27,24 +29,6 @@ namespace MaterialPrinter
 
     public class Engine
     {
-        #region default surface mesh data
-        static float[] vert_floats =
-			{
-				 1.0f, 1.0f, 0.0f, -1.0f, 1.0f, 0.0f, -1.0f, -1.0f, 0.0f, 1.0f, -1.0f, 0.0f
-			};
-        readonly static int[] nverts =
-			{
-				4
-			};
-        readonly static int[] vertex_indices =
-			{
-				0, 1, 2, 3
-			};
-        private static float[] UV_coords = 
-            {
-                1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.5f, 0.5f, 0.0f, 0.5f, 0.0f, 1.0f, 0.5f, 1.0f
-            };
-        #endregion
         private const uint width = 1024;
         private const uint height = 1024;
         private const uint samples = 1;
@@ -54,6 +38,7 @@ namespace MaterialPrinter
         static Client Client { get; set; }
         static Device Device { get; set; }
         static Scene Scene { get; set; }
+
 
         private static bool b_init = false;
 
@@ -73,6 +58,12 @@ namespace MaterialPrinter
         public static IUI Iui
         {
             set { Engine._iui = value; }
+        }
+
+        static uint mesh;
+        public static uint Mesh
+        {
+            set { Engine.Mesh = value; }
         }
 
         public static void ShowMaterial()
@@ -353,7 +344,10 @@ namespace MaterialPrinter
             scene.Camera.FocalDistance = 0.0f;
             scene.Camera.SensorWidth = 32.0f;
             scene.Camera.SensorHeight = 18.0f;
+
             #endregion
+
+            
 
             SetMessage("Creating default shader...");
 
@@ -391,26 +385,45 @@ namespace MaterialPrinter
             scene.Background.Visibility = PathRay.AllVisibility;
             #endregion
 
-            /* get scene-specific default shader ID */
-            var default_shader = scene.ShaderSceneId(scene.DefaultSurface);
+            ///* get scene-specific default shader ID */
+            //var default_shader = scene.ShaderSceneId(scene.DefaultSurface);
 
-            SetMessage("Set integrator settings...");
-            /* Set integrator settings */
-            scene.Integrator.IntegratorMethod = IntegratorMethod.Path;
-            scene.Integrator.MaxBounce = 1;
-            scene.Integrator.MinBounce = 1;
-            scene.Integrator.NoCaustics = true;
-            scene.Integrator.MaxDiffuseBounce = 1;
-            scene.Integrator.MaxGlossyBounce = 1;
-            scene.Integrator.Seed = 1;
-            scene.Integrator.SamplingPattern = SamplingPattern.Sobol;
-            scene.Integrator.FilterGlossy = 0.0f;
+            //SetMessage("Set integrator settings...");
+            ///* Set integrator settings */
+            //scene.Integrator.IntegratorMethod = IntegratorMethod.Path;
+            //scene.Integrator.MaxBounce = 1;
+            //scene.Integrator.MinBounce = 1;
+            //scene.Integrator.NoCaustics = true;
+            //scene.Integrator.MaxDiffuseBounce = 1;
+            //scene.Integrator.MaxGlossyBounce = 1;
+            //scene.Integrator.Seed = 1;
+            //scene.Integrator.SamplingPattern = SamplingPattern.Sobol;
+            //scene.Integrator.FilterGlossy = 0.0f;
 
             SetMessage("Add geometry to scene...");
             /* Add a bit of geometry and move camera around so we can see what we're rendering.
              * First off we need an object, we put it at the origo
              */
-            if(!sceneFile.Equals(string.Empty))
+            //#region default surface mesh data
+            //float[] vert_floats =
+            //    {
+            //         1.0f, 1.0f, 0.0f, -1.0f, 1.0f, 0.0f, -1.0f, -1.0f, 0.0f, 1.0f, -1.0f, 0.0f
+            //    };
+            //int[] nverts =
+            //    {
+            //        4
+            //    };
+            //int[] vertex_indices =
+            //    {
+            //        0, 1, 2, 3
+            //    };
+            //float[] UV_coords = 
+            //    {
+            //        1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.5f, 0.5f, 0.0f, 0.5f, 0.0f, 1.0f, 0.5f, 1.0f
+            //    };
+            //#endregion
+
+            if (!sceneFile.Equals(string.Empty))
             {
                 var xml = new XmlReader(client, sceneFile);
                 xml.Parse();
@@ -419,44 +432,45 @@ namespace MaterialPrinter
             }
             else
             {
-                var fc = Engine.nverts.Aggregate(0, (total, next) =>
-                                                                            next == 4 ? total + 2 : total + 1);
-                float[] uvs = new float[fc * 3 * 2];
-                var uvoffs = 0;
 
-                // OLD
-                var ob = CSycles.scene_add_object(Client.Id, scene.Id);
-                CSycles.object_set_matrix(Client.Id, scene.Id, ob, Transform.Identity());
-                var mesh = CSycles.scene_add_mesh(Client.Id, scene.Id, ob, default_shader);
+                //var fc = nverts.Aggregate(0, (total, next) =>
+                //                                                            next == 4 ? total + 2 : total + 1);
+                //float[] uvs = new float[fc * 3 * 2];
+                //var uvoffs = 0;
 
-                /* populate mesh with geometry */
-                
-                CSycles.mesh_set_verts(Client.Id, scene.Id, mesh, ref vert_floats, (uint)(vert_floats.Length / 3));
-                var index_offset = 0;
-                foreach (var face in nverts)
-                {
-                    for (var j = 0; j < face - 2; j++)
-                    {
-                        var v0 = (uint)vertex_indices[index_offset];
-                        var v1 = (uint)vertex_indices[index_offset + j + 1];
-                        var v2 = (uint)vertex_indices[index_offset + j + 2];
+                //// OLD
+                //var ob = CSycles.scene_add_object(Client.Id, scene.Id);
+                //CSycles.object_set_matrix(Client.Id, scene.Id, ob, Transform.Identity());
+                //var mesh = CSycles.scene_add_mesh(Client.Id, scene.Id, ob, default_shader);
 
-                        uvs[uvoffs] = UV_coords[index_offset * 2];
-                        uvs[uvoffs + 1] = UV_coords[index_offset * 2 + 1];
-                        uvs[uvoffs + 2] = UV_coords[(index_offset + j + 1) * 2];
-                        uvs[uvoffs + 3] = UV_coords[(index_offset + j + 1) * 2 + 1];
-                        uvs[uvoffs + 4] = UV_coords[(index_offset + j + 2) * 2];
-                        uvs[uvoffs + 5] = UV_coords[(index_offset + j + 2) * 2 + 1];
+                ///* populate mesh with geometry */
 
-                        uvoffs += 6;
+                //CSycles.mesh_set_verts(Client.Id, scene.Id, mesh, ref vert_floats, (uint)(vert_floats.Length / 3));
+                //var index_offset = 0;
+                //foreach (var face in nverts)
+                //{
+                //    for (var j = 0; j < face - 2; j++)
+                //    {
+                //        var v0 = (uint)vertex_indices[index_offset];
+                //        var v1 = (uint)vertex_indices[index_offset + j + 1];
+                //        var v2 = (uint)vertex_indices[index_offset + j + 2];
 
-                        CSycles.mesh_add_triangle(Client.Id, scene.Id, mesh, v0, v1, v2, default_shader, false);
-                    }
+                //        uvs[uvoffs] = UV_coords[index_offset * 2];
+                //        uvs[uvoffs + 1] = UV_coords[index_offset * 2 + 1];
+                //        uvs[uvoffs + 2] = UV_coords[(index_offset + j + 1) * 2];
+                //        uvs[uvoffs + 3] = UV_coords[(index_offset + j + 1) * 2 + 1];
+                //        uvs[uvoffs + 4] = UV_coords[(index_offset + j + 2) * 2];
+                //        uvs[uvoffs + 5] = UV_coords[(index_offset + j + 2) * 2 + 1];
 
-                    index_offset += face;
-                }
+                //        uvoffs += 6;
 
-                CSycles.mesh_set_uvs(Client.Id, scene.Id, mesh, ref uvs, (uint)(uvs.Length / 2));
+                //        CSycles.mesh_add_triangle(Client.Id, scene.Id, mesh, v0, v1, v2, default_shader, false);
+                //    }
+
+                //    index_offset += face;
+                //}
+
+                //CSycles.mesh_set_uvs(Client.Id, scene.Id, mesh, ref uvs, (uint)(uvs.Length / 2));
 
             }         
 
@@ -553,8 +567,365 @@ namespace MaterialPrinter
 
         }
 
-        public static void Render(int tile)
+        //public static void InitGroundPlane()
+        //{
+        //    string sceneFile = _iui.getSceneFileName();//Path.GetFullPath(_iui.getSceneFileName());
+
+        //    CSycles.set_kernel_path("lib");
+        //    CSycles.initialise();
+
+        //    SetMessage("Initialising callbacks...");
+
+        //    g_update_callback = StatusUpdateCallback;
+        //    g_update_render_tile_callback = UpdateRenderTileCallback;
+        //    g_write_render_tile_callback = WriteRenderTileCallback;
+        //    g_logger_callback = LoggerCallback;
+
+        //    Scene scene = Engine.Scene;
+        //    /* get scene-specific default shader ID */
+        //    var default_shader = scene.ShaderSceneId(scene.DefaultSurface);
+
+        //    SetMessage("Set integrator settings...");
+        //    /* Set integrator settings */
+        //    scene.Integrator.IntegratorMethod = IntegratorMethod.Path;
+        //    scene.Integrator.MaxBounce = 1;
+        //    scene.Integrator.MinBounce = 1;
+        //    scene.Integrator.NoCaustics = true;
+        //    scene.Integrator.MaxDiffuseBounce = 1;
+        //    scene.Integrator.MaxGlossyBounce = 1;
+        //    scene.Integrator.Seed = 1;
+        //    scene.Integrator.SamplingPattern = SamplingPattern.Sobol;
+        //    scene.Integrator.FilterGlossy = 0.0f;
+
+        //    SetMessage("Add geometry to scene...");
+        //    /* Add a bit of geometry and move camera around so we can see what we're rendering.
+        //     * First off we need an object, we put it at the origo
+        //     */
+            
+
+        //    if (!sceneFile.Equals(string.Empty))
+        //    {
+        //        var xml = new XmlReader(Engine.Client, sceneFile);
+        //        xml.Parse();
+        //        var width = (uint)scene.Camera.Size.Width;
+        //        var height = (uint)scene.Camera.Size.Height;
+        //    }
+        //    else
+        //    {
+
+                
+        //    }
+        //}
+
+
+
+        public static void RenderLoop()
         {
+            CSycles.set_kernel_path("lib");
+            CSycles.initialise();
+
+            Scene scene = Engine.Scene;
+            
+            string outFolder = _iui.getOutputFolderName();//Path.GetFullPath(_iui.getOutputFolderName());
+
+            
+
+            _iui.SetText("Cuda available: " + Device.CudaAvailable());
+
+            _iui.SetText("RENDERLOOP STARTED");
+
+            // Start Stopwatch Tile
+            var watchRender = new Stopwatch();         
+            watchRender.Start();
+
+            //TODO: send correct ones
+            #region Render Script Variables
+            RenderScript rs = new RenderScript();
+            rs.CurrentX = 0;
+            rs.CurrentY = 0;
+            rs.NumberOfHorizontalSteps = 3;
+            rs.NumberOfVerticalSteps = 3;
+            rs.TestRender = false;
+            rs.TestStepX = 2;
+            rs.TestStepY = 3;
+            rs.OrthoScale = 1;
+            #endregion
+
+            #region default surface mesh data
+            float[] vert_floats =
+			    {
+				     1.0f, 1.0f, 0.0f, -1.0f, 1.0f, 0.0f, -1.0f, -1.0f, 0.0f, 1.0f, -1.0f, 0.0f
+			    };
+            int[] nverts =
+			    {
+				    4
+			    };
+            int[] vertex_indices =
+			    {
+				    0, 1, 2, 3
+			    };
+            float[] UV_coords = 
+                {
+                    1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.5f, 0.5f, 0.0f, 0.5f, 0.0f, 1.0f, 0.5f, 1.0f
+                };
+            #endregion
+
+            var default_shader = scene.DefaultSurface.Id;
+
+
+            var fc = nverts.Aggregate(0, (total, next) =>
+                                                                        next == 4 ? total + 2 : total + 1);
+            float[] uvs = new float[fc * 3 * 2];
+            var uvoffs = 0;
+
+            // SCALE THE MESH
+            var t = new Transform();
+            t = t * Transform.Scale(rs.NumberOfHorizontalSteps, rs.NumberOfVerticalSteps, 1.0f);
+
+            var ob = CSycles.scene_add_object(Client.Id, scene.Id);
+            CSycles.object_set_matrix(Client.Id, scene.Id, ob, Transform.Identity());
+            mesh = CSycles.scene_add_mesh(Client.Id, scene.Id, ob, default_shader);
+
+            // SCALE THE MESH
+            /*
+            var t = new Transform(scalevalue);
+            transform = t;
+
+            var components = parse_floats(scale);
+            if (components.Length == 3)
+            {
+                transform = transform * ccl.Transform.Scale(components[0], components[1], components[2]);
+            }
+
+            CSycles.object_set_matrix(mesh, scene, ob, transform);
+             * */
+            
+
+
+
+            /* populate mesh with geometry */
+            CSycles.mesh_set_verts(Client.Id, scene.Id, mesh, ref vert_floats, (uint)(vert_floats.Length / 3));
+            var index_offset = 0;
+            foreach (var face in nverts)
+            {
+                for (var j = 0; j < face - 2; j++)
+                {
+                    var v0 = (uint)vertex_indices[index_offset];
+                    var v1 = (uint)vertex_indices[index_offset + j + 1];
+                    var v2 = (uint)vertex_indices[index_offset + j + 2];
+
+                    uvs[uvoffs] = UV_coords[index_offset * 2];
+                    uvs[uvoffs + 1] = UV_coords[index_offset * 2 + 1];
+                    uvs[uvoffs + 2] = UV_coords[(index_offset + j + 1) * 2];
+                    uvs[uvoffs + 3] = UV_coords[(index_offset + j + 1) * 2 + 1];
+                    uvs[uvoffs + 4] = UV_coords[(index_offset + j + 2) * 2];
+                    uvs[uvoffs + 5] = UV_coords[(index_offset + j + 2) * 2 + 1];
+
+                    uvoffs += 6;
+
+                    CSycles.mesh_add_triangle(Client.Id, scene.Id, mesh, v0, v1, v2, default_shader, false);
+                }
+
+                index_offset += face;
+            }
+            CSycles.mesh_set_uvs(Client.Id, scene.Id, mesh, ref uvs, (uint)(uvs.Length / 2));
+
+            
+
+
+
+
+
+            if (rs.TestRender)
+            {
+                // Init Camera Start position
+                _iui.SetText("Init Camera position");
+                var t = Transform.Identity();
+                var xpos_test =  -(((rs.NumberOfHorizontalSteps*rs.OrthoScale)/2)-rs.OrthoScale/2) + rs.OrthoScale*rs.TestStepX;
+                var ypos_test =  ((rs.NumberOfVerticalSteps*rs.OrthoScale)/2)-rs.OrthoScale/2 - rs.OrthoScale*rs.TestStepY;
+                t = t * Transform.Translate(xpos_test, ypos_test, 5.0f);
+                Engine.Scene.Camera.Matrix = t;
+
+                // Create filename
+                string filename = "Testrender";
+
+                // Start Stopwatch Tile
+                var watch = new Stopwatch();
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+                watch.Start();
+
+                // Set session parameters + create session
+                _iui.SetText("Setting up session parameters...");
+                var session_params = new SessionParameters(Client, Device)
+                {
+                    Experimental = false,
+                    Samples = (int)samples,
+                    TileSize = new Size(64, 64),
+                    StartResolution = 64,
+                    Threads = 1,
+                    ShadingSystem = ShadingSystem.SVM,
+                    Background = true,
+                    ProgressiveRefine = false
+                };
+                Session = new Session(Client, session_params, Scene);
+                Session.Reset(width, height, samples);
+                Session.UpdateCallback = g_update_callback;
+                Session.UpdateTileCallback = g_update_render_tile_callback;
+                Session.WriteTileCallback = g_write_render_tile_callback;
+
+                _iui.SetText("RENDERING...");
+                Session.Start();
+                Session.Wait();
+
+                uint bufsize;
+                uint bufstride;
+                CSycles.session_get_buffer_info(Client.Id, Session.Id, out bufsize, out bufstride);
+                var pixels = CSycles.session_copy_buffer(Client.Id, Session.Id, bufsize);
+
+                // Save render
+                _iui.SetText("Creating bitmap...");
+                var bmp = new Bitmap((int)width, (int)height);
+                for (var x = 0; x < width; x++)
+                {
+                    for (var y = 0; y < height; y++)
+                    {
+                        var i = y * (int)width * 4 + x * 4;
+                        var r = ColorClamp((int)(pixels[i] * 255.0f));
+                        var g = ColorClamp((int)(pixels[i + 1] * 255.0f));
+                        var b = ColorClamp((int)(pixels[i + 2] * 255.0f));
+                        var a = ColorClamp((int)(pixels[i + 3] * 255.0f));
+                        bmp.SetPixel(x, y, Color.FromArgb(a, r, g, b));
+                    }
+                }
+                _iui.SetText("Saving bitmap...");
+                if (string.IsNullOrEmpty(outFolder))
+                    bmp.Save(filename + ".bmp");
+                else
+                    bmp.Save(outFolder + "\\" + filename + ".bmp");
+
+                // Do garbage collection
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+
+                // End Stopwatch Tile
+                watch.Stop();
+
+                
+
+                // Report Time
+                _iui.SetText("PROFILER \'" + filename + "\': " + watch.Elapsed.TotalMilliseconds + " ms , CSycles: " + CSycles.progress_get_status(Client.Id, Session.Id));
+            }
+            else
+            {
+                // Init Camera Start position
+                _iui.SetText("Init Camera position");
+                var t = Transform.Identity();
+                var xpos =  -(((rs.NumberOfHorizontalSteps*rs.OrthoScale)/2)-rs.OrthoScale/2);
+                var ypos =  ((rs.NumberOfVerticalSteps*rs.OrthoScale)/2)-rs.OrthoScale/2;
+                t = t * Transform.Translate(xpos, ypos, 5.0f);
+                Engine.Scene.Camera.Matrix = t;
+
+                // Create filename
+                string filename = "";
+
+                for (var X = 0; X < rs.NumberOfHorizontalSteps; X++)
+                {
+                    for (var Y = 0; Y < rs.NumberOfVerticalSteps; Y++)
+                    {
+                        filename = "3#" + Convert.ToInt32(Y / 10) + Convert.ToInt32(Y % 10) + Convert.ToInt32(X / 10) + Convert.ToInt32(X % 10);
+                        // Start Stopwatch Tile
+                        var watch = new Stopwatch();
+                        GC.Collect();
+                        GC.WaitForPendingFinalizers();
+                        GC.Collect();
+                        watch.Start();
+
+                        // Set session parameters + create session
+                        _iui.SetText("Setting up session parameters...");
+                        var session_params = new SessionParameters(Client, Device)
+                        {
+                            Experimental = false,
+                            Samples = (int)samples,
+                            TileSize = new Size(64, 64),
+                            StartResolution = 64,
+                            Threads = 1,
+                            ShadingSystem = ShadingSystem.SVM,
+                            Background = true,
+                            ProgressiveRefine = false
+                        };
+                        Session = new Session(Client, session_params, Scene);
+                        Session.Reset(width, height, samples);
+                        Session.UpdateCallback = g_update_callback;
+                        Session.UpdateTileCallback = g_update_render_tile_callback;
+                        Session.WriteTileCallback = g_write_render_tile_callback;
+
+                        _iui.SetText("RENDERING...");
+                        Session.Start();
+                        Session.Wait();
+
+                        uint bufsize;
+                        uint bufstride;
+                        CSycles.session_get_buffer_info(Client.Id, Session.Id, out bufsize, out bufstride);
+                        var pixels = CSycles.session_copy_buffer(Client.Id, Session.Id, bufsize);
+
+                        // Save render
+                        _iui.SetText("Creating bitmap...");
+                        var bmp = new Bitmap((int)width, (int)height);
+                        for (var x = 0; x < width; x++)
+                        {
+                            for (var y = 0; y < height; y++)
+                            {
+                                var i = y * (int)width * 4 + x * 4;
+                                var r = ColorClamp((int)(pixels[i] * 255.0f));
+                                var g = ColorClamp((int)(pixels[i + 1] * 255.0f));
+                                var b = ColorClamp((int)(pixels[i + 2] * 255.0f));
+                                var a = ColorClamp((int)(pixels[i + 3] * 255.0f));
+                                bmp.SetPixel(x, y, Color.FromArgb(a, r, g, b));
+                            }
+                        }
+                        _iui.SetText("Saving bitmap...");
+                        if (string.IsNullOrEmpty(outFolder))
+                            bmp.Save(filename + ".bmp");
+                        else
+                            bmp.Save(outFolder + "\\" + filename + ".bmp");
+
+                        // Do garbage collection
+                        GC.Collect();
+                        GC.WaitForPendingFinalizers();
+                        GC.Collect();
+
+                        // End Stopwatch Tile
+                        watch.Stop();
+                                                
+                        // Set Camera position
+                        _iui.SetText("Changing Camera position...");
+                        t = Transform.Identity();                        
+                        t = t * Transform.Translate(xpos + X*rs.OrthoScale, ypos + Y*rs.OrthoScale, 5.0f);
+                        Engine.Scene.Camera.Matrix = t;
+
+                        // Report Time
+                        _iui.SetText("Render time \'" + filename + "\': " + watch.Elapsed.TotalMilliseconds + " ms , CSycles: " + CSycles.progress_get_status(Client.Id, Session.Id));
+                    }
+                }
+            }
+
+            _iui.SetText("RENDERLOOP FINISHED");
+
+            watchRender.Stop();
+            // Report Time
+            _iui.SetText("Total render time: " + watchRender.Elapsed.TotalMilliseconds + " ms , CSycles: " + CSycles.progress_get_status(Client.Id, Session.Id));
+
+
+            CSycles.shutdown();
+        }
+
+        public static void Render(string filename)
+        {
+            
+
             CSycles.set_kernel_path("lib");
             CSycles.initialise();
 
@@ -588,7 +959,7 @@ namespace MaterialPrinter
             Session.WriteTileCallback = g_write_render_tile_callback;
 
 
-            _iui.SetText("Rendering tile " + tile + ": " + CSycles.progress_get_status(Client.Id, Session.Id));
+            _iui.SetText("Rendering tile " + filename + ": " + CSycles.progress_get_status(Client.Id, Session.Id));
 
             //_iui.SetText("Devices: " + Device.GetDevice(2).Name);
             //_iui.SetText("Device 0: " + Device.GetDevice(0).Name + ", Device 1: " + Device.GetDevice(1).Name + ", Device 2: " + Device.GetDevice(2).Name + ", Cuda available: " + Device.CudaAvailable() + ", Cuda device: " + Device.FirstCuda.Name);
@@ -619,9 +990,9 @@ namespace MaterialPrinter
             _iui.SetText("Saving bitmap...");
 
             if (string.IsNullOrEmpty(outFolder))
-                bmp.Save("test" + tile + ".bmp");
+                bmp.Save("" + filename + ".bmp");
             else
-                bmp.Save(outFolder + "\\test" + tile + ".bmp");
+                bmp.Save(outFolder + "\\" + filename + ".bmp");
 
             _iui.SetText("Done");
 

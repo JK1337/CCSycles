@@ -45,6 +45,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Messaging" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -55,8 +56,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Engine\RenderScript.cs" />
     <Compile Include="Engine\TestShader.cs" />
-    <Compile Include="Engine\Engine.cs" />
+    <Compile Include="C:\Users\kindtj\Desktop\my branch\MaterialPrinter\Engine.cs">
+      <Link>Engine\Engine.cs</Link>
+    </Compile>
     <Compile Include="Application\Form1.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -64,9 +68,13 @@
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
     <Compile Include="Application\Program.cs" />
+    <Compile Include="NumericTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Engine\XmlReader.cs" />
     <Compile Include="Engine\XmlReadState.cs" />
+    <Compile Include="RenderJob.cs" />
     <EmbeddedResource Include="Application\Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
